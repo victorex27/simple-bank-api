@@ -96,19 +96,6 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-You need to have the following installed and setup before installing the application.
-* Installation of npm on your local machine
-  ```sh
-  npm install npm@latest -g
-  ```
-* Installation of yarn
-
-* Set up a SendGrid account and a SendGrid Api key, Take note of the api key and the sender parameters.
-* Set up a Google cloud storage bucket. Take note of the project id and bucket name.
-* Set up a Google service account and download the credentials. This service account must have the relevant rights for the bucket
-* Set up an OAuth 2.0 Client ID in google cloud. Copy the Client Id and Client Secret. Google OAuth will be used as a sign in option on the application.
-* Set Up Mysql and take note of the credentials.
-* Set up a Firebase Project. Look for cloud Messaging inside te project and enable it. Copy and store the sdk detail. Go to the Project Overview page, Select "Service Account" and generate the configuration based on the environment you are going to be using, in our case nodejs
 
 
 
