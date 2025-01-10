@@ -144,7 +144,6 @@ Project Link: [https://github.com/victorex27/simple-bank-api](https://github.com
 I would like to give credit to these amazing resources without which, this project would not have been a success!
 
 * [Img Shields](https://shields.io)
-* [Setting up SendGrid Account](https://www.adarsha.dev/blog/nestjs-sendgrid-email-service)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

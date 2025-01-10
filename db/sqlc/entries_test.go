@@ -114,7 +114,7 @@ func TestUpdateEntry(t *testing.T) {
 	require.Equal(t, arg.Amount, updatedEntry.Amount)
 	require.Equal(t, account.ID, updatedEntry.AccountID)
 
-	require.WithinDuration(t, account.CreatedAt, updatedEntry.CreatedAt, time.Second)
+	require.WithinDuration(t, entry.CreatedAt, updatedEntry.CreatedAt, time.Second)
 
 }
 
@@ -148,8 +148,6 @@ func TestListEntries(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, retrievedEntries, 5)
 	require.Len(t, entries, 10)
-
-	
 
 	for _, entry := range retrievedEntries {
 
