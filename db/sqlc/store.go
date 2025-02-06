@@ -47,9 +47,10 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type TransferTxParams struct {
-	FromAccountID int64 `json:"from_account_id"`
-	ToAccountID   int64 `json:"to_account_id"`
-	Amount        int64 `json:"amount"`
+	FromAccountID int64          `json:"from_account_id"`
+	ToAccountID   int64          `json:"to_account_id"`
+	Amount        int64          `json:"amount"`
+	TxKey         transactionKey `json:"tx_key"`
 }
 
 type TransferTxResult struct {
@@ -60,7 +61,12 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
-var txKey = struct{}{}
+// var txKey = struct{}{}
+type transactionKey string
+
+const (
+	DefaultTransactionKey transactionKey = "default_tx" // Provide a default value
+)
 
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
@@ -68,10 +74,14 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 
-		txName := ctx.Value(txKey)
+		txName := ctx.Value(arg.TxKey)
 
 		fmt.Println(txName, "create transfer")
-		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams(arg))
+		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
+			FromAccountID: arg.FromAccountID,
+			ToAccountID:   arg.ToAccountID,
+			Amount:        arg.Amount,
+		})
 
 		if err != nil {
 			return err
@@ -95,24 +105,23 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
-		fmt.Println(txName, "update account 1")
-		result.FromAccount, err = q.AddToAccountBalance(ctx, AddToAccountBalanceParams{
-			ID:     arg.FromAccountID,
-			Amount: -arg.Amount,
-		})
+		fmt.Println("######################################")
 
-		if err != nil {
-			return err
+		acc1, _ := q.GetAccount(ctx, arg.FromAccountID)
+		acc2, _ := q.GetAccount(ctx, arg.ToAccountID)
+		fmt.Println("Balance before transaction, acc1: ", acc1.Balance)
+		fmt.Println("Balance before transaction, acc2: ", acc2.Balance)
+
+		// we want to make sure that the account with the smaller id
+		// is always updated first.
+		if arg.FromAccountID < arg.ToAccountID {
+
+			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
+		} else {
+			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
+
 		}
-
-		//Update account balance for recipient
-
-		fmt.Println(txName, "update account 2")
-		result.ToAccount, err = q.AddToAccountBalance(ctx, AddToAccountBalanceParams{
-			ID:     arg.ToAccountID,
-			Amount: arg.Amount,
-		})
-
+		
 		if err != nil {
 			return err
 		}
@@ -121,4 +130,29 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 	})
 
 	return result, err
+}
+
+func addMoney(
+	ctx context.Context,
+	q *Queries,
+	accountID1 int64,
+	amount1 int64,
+	accountID2 int64,
+	amount2 int64) (account1 Account, account2 Account, err error) {
+	account1, err = q.AddToAccountBalance(ctx, AddToAccountBalanceParams{
+		ID:     accountID1,
+		Amount: amount1,
+	})
+
+	if err != nil {
+		return
+	}
+
+	account2, err = q.AddToAccountBalance(ctx, AddToAccountBalanceParams{
+		ID:     accountID2,
+		Amount: amount2,
+	})
+
+	return
+
 }
