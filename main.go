@@ -6,18 +6,19 @@ import (
 
 	"github.com.victorex27/simple_bank/api"
 	db "github.com.victorex27/simple_bank/db/sqlc"
+	"github.com.victorex27/simple_bank/util"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgresql://root:1759@localhost:5433/simple_bank?sslmode=disable"
-	serverAddress = "0.0.0.0:3000"
-)
-
 func main() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig(".")
+
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+
+	conn, err := sql.Open(config.DbDriver, config.DbSource)
 
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
@@ -26,7 +27,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server", err)
 	}
